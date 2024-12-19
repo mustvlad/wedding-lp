@@ -68,7 +68,7 @@ function HeavenPlanes() {
   );
 }
 
-export default function App() {
+function Cursor() {
   const x = useValue(0);
   const y = useValue(0);
 
@@ -78,21 +78,27 @@ export default function App() {
   });
 
   return (
+    <animate.div
+      style={{
+        width: CURSOR_SIZE,
+        height: CURSOR_SIZE,
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        border: "0.3px solid rgba(255, 255, 255, 0.5)",
+        boxShadow: "0px 0px 5px rgba(255, 255, 255, 0.5)",
+        borderRadius: "50%",
+        translateX: x.value,
+        translateY: y.value,
+        position: "fixed",
+        zIndex: 1000,
+      }}
+    />
+  );
+}
+
+export default function App() {
+  return (
     <>
-      <animate.div
-        style={{
-          width: CURSOR_SIZE,
-          height: CURSOR_SIZE,
-          backgroundColor: "rgba(255, 255, 255, 0.5)",
-          border: "0.3px solid rgba(255, 255, 255, 0.5)",
-          boxShadow: "0px 0px 5px rgba(255, 255, 255, 0.5)",
-          borderRadius: "50%",
-          translateX: x.value,
-          translateY: y.value,
-          position: "fixed",
-          zIndex: 1000,
-        }}
-      />
+      <Cursor />
 
       <Canvas>
         <HeavenPlanes />
