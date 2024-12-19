@@ -89,7 +89,7 @@ function Cursor() {
         translateX: x.value,
         translateY: y.value,
         position: "fixed",
-        zIndex: 1000,
+        zIndex: 9999,
       }}
     />
   );
@@ -97,7 +97,7 @@ function Cursor() {
 
 function Corners() {
   return (
-    <>
+    <div className="pointer-events-none">
       <img 
         src="Asset 4.svg" 
         alt="Corner 4"
@@ -121,7 +121,44 @@ function Corners() {
         alt="Corner 2"
         className="fixed bottom-5 right-5 w-[50px] h-[50px] z-[1000]"
       />
-    </>
+    </div>
+  );
+}
+
+function Content() {
+  return (
+    <div className="fixed top-0 left-0 w-full h-full z-[1000] pointer-events-none">
+      {/* Top text */}
+      <div className="absolute top-5 left-0 w-full text-center pt-2 px-20">
+        <p className="font-body italic md:text-2xl">
+          We can&apos;t wait to begin our journey as a family, surrounded by those we love most.
+        </p>
+      </div>
+
+      {/* Middle text */}
+      <div className="absolute top-0 left-0 bottom-0 w-full text-center pt-2 px-20 flex flex-col items-center justify-center">
+        <h1 className="font-heading text-4xl md:text-6xl">
+          Andreea & Vlad
+        </h1>
+        <p className="font-body italic md:text-2xl mt-2">
+          are getting married, and you&apos;re invited!
+        </p>
+        <div className="flex flex-col items-center justify-center mt-10">
+          <img src="/Asset 8.svg" alt="RSVP" className="px-4" />
+          <a href="#" className="bg-white px-8 py-2.5 text-lg my-2">
+            RSVP HERE
+          </a>
+          <img src="/Asset 7.svg" alt="RSVP" className="px-4" />
+        </div>
+      </div>
+
+      {/* Bottom text */}
+      <div className="absolute bottom-5 left-0 w-full text-center pb-3 px-20">
+        <p className="font-body md:text-2xl">
+          Sunday, June 29, 2025, 17:00 • Villa Corsini a Mezzomonte (Tuscany, Italy)
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -147,13 +184,15 @@ export default function App() {
             rainbow={false}
             blend={0}
             showBackground={true}
-            backgroundColor="#a7958b"
-            fluidColor="#cfc0a8"
+            backgroundColor="#a5d7e8"
+            fluidColor="#d6edf5"
           />
         </EffectComposer>
       </Canvas>
 
       <Corners />
+
+      <Content />
     </>
   );
 }
