@@ -95,6 +95,36 @@ function Cursor() {
   );
 }
 
+function Corners() {
+  return (
+    <>
+      <img 
+        src="Asset 4.svg" 
+        alt="Corner 4"
+        className="fixed top-5 left-5 w-[50px] h-[50px] z-[1000]"
+      />
+
+      <img 
+        src="Asset 3.svg" 
+        alt="Corner 3"
+        className="fixed top-5 right-5 w-[50px] h-[50px] z-[1000]"
+      />
+
+      <img 
+        src="Asset 1.svg" 
+        alt="Corner 1"
+        className="fixed bottom-5 left-5 w-[50px] h-[50px] z-[1000]"
+      />
+
+      <img 
+        src="Asset 2.svg" 
+        alt="Corner 2"
+        className="fixed bottom-5 right-5 w-[50px] h-[50px] z-[1000]"
+      />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <>
@@ -122,6 +152,8 @@ export default function App() {
           />
         </EffectComposer>
       </Canvas>
+
+      <Corners />
     </>
   );
 }
