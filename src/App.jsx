@@ -2,7 +2,7 @@ import { useTexture } from "@react-three/drei";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Fluid } from "@whatisjery/react-fluid-distortion";
 import { EffectComposer } from "@react-three/postprocessing";
-import { useMouseMove, useValue, animate, withEase } from "react-ui-animate";
+import { useMouseMove, useValue, animate } from "react-ui-animate";
 import {
   useRef,
   Suspense,
@@ -13,7 +13,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import { RiverPass } from "./RiverPass";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 
 const CURSOR_SIZE = 25;
 const ASPECT_RATIO = 1.77;
@@ -25,10 +25,18 @@ const Context = createContext();
 
 function ContextProvider({ children }) {
   const [cursorColor, setCursorColor] = useState("rgba(255, 255, 255, 0.5)");
+  const [cursorSize, setCursorSize] = useState(CURSOR_SIZE);
   const [riverProgress, setRiverProgress] = useState(1);
   
   return (
-    <Context.Provider value={{ cursorColor, setCursorColor, riverProgress, setRiverProgress }}>
+    <Context.Provider value={{ 
+      cursorColor, 
+      setCursorColor, 
+      cursorSize, 
+      setCursorSize, 
+      riverProgress, 
+      setRiverProgress 
+    }}>
       {children}
     </Context.Provider>
   );
@@ -95,30 +103,29 @@ function HeavenPlanes() {
 
 /** Cursor */
 function Cursor() {
-  const { cursorColor } = useContext(Context);
+  const { cursorColor, cursorSize } = useContext(Context);
 
   const x = useValue(0);
   const y = useValue(0);
   const color = useValue(cursorColor);
+  const size = useValue(cursorSize);
 
   useMouseMove(({ mouseX, mouseY }) => {
-    // x.value = withEase(mouseX - CURSOR_SIZE / 2);
-    // y.value = withEase(mouseY - CURSOR_SIZE / 2);
-
-    x.value = mouseX - CURSOR_SIZE / 2;
-    y.value = mouseY - CURSOR_SIZE / 2;
+    x.value = mouseX - size.currentValue / 2;
+    y.value = mouseY - size.currentValue / 2;
   });
 
-  // Update color with animation when cursorColor changes
+  // Update color and size with animation
   useEffect(() => {
     color.value = cursorColor;
-  }, [color, cursorColor]);
+    size.value = cursorSize;
+  }, [color, cursorColor, size, cursorSize]);
 
   return (
     <animate.div
       style={{
-        width: CURSOR_SIZE,
-        height: CURSOR_SIZE,
+        width: size.value,
+        height: size.value,
         backgroundColor: color.value,
         border: `0.3px solid ${color.value}`,
         boxShadow: `0px 0px 5px ${color.value}`,
@@ -127,7 +134,7 @@ function Cursor() {
         translateY: y.value,
         position: "fixed",
         zIndex: 9999,
-        transition: "all .075s ease, background-color .5s ease",
+        transition: "all .075s ease, background-color .5s ease, width .3s ease, height .3s ease",
       }}
       className="pointer-events-none hidden md:block"
     />
@@ -190,14 +197,57 @@ function Corners() {
 
 /** Content */
 function Content() {
-  const { setCursorColor, riverProgress } = useContext(Context);
+  const { setCursorColor, setCursorSize, riverProgress } = useContext(Context);
+
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const containerRef = useRef(null);
+  
+  const springConfig = { damping: 15, stiffness: 150 };
+  const springX = useSpring(x, springConfig);
+  const springY = useSpring(y, springConfig);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (event) => {
+      if (!containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const containerCenterX = rect.left + rect.width / 2;
+      const containerCenterY = rect.top + rect.height / 2;
+
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      const distanceX = mouseX - containerCenterX;
+      const distanceY = mouseY - containerCenterY;
+      const distance = Math.sqrt(distanceX ** 2 + distanceY ** 2);
+
+      const radius = 120;
+
+      if (distance < radius) {
+        const moveX = (distanceX / radius) * 50;
+        const moveY = (distanceY / radius) * 50;
+        
+        x.set(moveX);
+        y.set(moveY);
+      } else {
+        x.set(0);
+        y.set(0);
+      }
+    };
+
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, [x, y]);
 
   const handleMouseEnter = () => {
     setCursorColor("rgba(0, 0, 0, 0.5)");
+    setCursorSize(CURSOR_SIZE * 1.25);
   };
 
   const handleMouseLeave = () => {
     setCursorColor("rgba(255, 255, 255, 0.5)");
+    setCursorSize(CURSOR_SIZE);
   };
 
   const containerVariants = {
@@ -343,8 +393,13 @@ function Content() {
               are getting married, and you&apos;re invited!
             </motion.p>
             <motion.div 
+              ref={containerRef}
               className="flex flex-col items-center justify-center mt-10"
               variants={rsvpContainerVariants}
+              style={{
+                x: springX,
+                y: springY
+              }}
             >
               <motion.img 
                 src="/Asset 8.svg" 
@@ -354,7 +409,7 @@ function Content() {
               />
               <motion.a
                 href="#"
-                className="bg-white px-8 py-2.5 text-lg my-2 pointer-events-auto"
+                className="bg-white px-8 py-2.5 text-lg my-2 pointer-events-auto relative"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 variants={rsvpItemVariants}
