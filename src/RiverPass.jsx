@@ -1,6 +1,6 @@
 import { Uniform } from "three";
 import { Effect as PostEffect, BlendFunction } from "postprocessing";
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useMemo } from "react";
 import PropTypes from 'prop-types';
 
 class RiverEffect extends PostEffect {
@@ -58,7 +58,12 @@ class RiverEffect extends PostEffect {
 
 // Create and export the pass
 export const RiverPass = forwardRef(({ progress = 0, scale = 1 }, ref) => {
-  const effect = new RiverEffect({ progress, scale });
+  const effect = useMemo(() => new RiverEffect({ progress, scale }), [scale]);
+  
+  useEffect(() => {
+    effect.uniforms.get("u_progress").value = progress;
+  }, [effect, progress]);
+
   return <primitive ref={ref} object={effect} dispose={null} />;
 });
 

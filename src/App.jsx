@@ -2,12 +2,7 @@ import { useTexture } from "@react-three/drei";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { Fluid } from "@whatisjery/react-fluid-distortion";
 import { EffectComposer } from "@react-three/postprocessing";
-import {
-  useMouseMove,
-  useValue,
-  animate,
-  withEase,
-} from "react-ui-animate";
+import { useMouseMove, useValue, animate, withEase } from "react-ui-animate";
 import {
   useRef,
   Suspense,
@@ -18,18 +13,22 @@ import {
 } from "react";
 import * as THREE from "three";
 import { RiverPass } from "./RiverPass";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CURSOR_SIZE = 25;
 const ASPECT_RATIO = 1.77;
 const BLEED = 1.2;
+const RIVER_MIN_PROGRESS = 0.01;
 
 /** State Context */
 const Context = createContext();
 
 function ContextProvider({ children }) {
   const [cursorColor, setCursorColor] = useState("rgba(255, 255, 255, 0.5)");
+  const [riverProgress, setRiverProgress] = useState(1);
+  
   return (
-    <Context.Provider value={{ cursorColor, setCursorColor }}>
+    <Context.Provider value={{ cursorColor, setCursorColor, riverProgress, setRiverProgress }}>
       {children}
     </Context.Provider>
   );
@@ -130,37 +129,60 @@ function Cursor() {
         zIndex: 9999,
         transition: "all .075s ease, background-color .5s ease",
       }}
-      className="pointer-events-none"
+      className="pointer-events-none hidden md:block"
     />
   );
 }
 
 /** Corners */
 function Corners() {
+  const { riverProgress } = useContext(Context);
+  
   return (
     <div className="pointer-events-none">
       <img
         src="Asset 4.svg"
         alt="Corner 4"
-        className="fixed top-5 left-5 w-[50px] h-[50px] z-[1000]"
+        className="fixed top-5 left-5 w-[50px] h-[50px] z-[1000] transition-all duration-1000"
+        style={{
+          transform: riverProgress === RIVER_MIN_PROGRESS 
+            ? 'translate(0, 0)' 
+            : 'translate(-100%, -100%)',
+          opacity: riverProgress === RIVER_MIN_PROGRESS ? 1 : 0
+        }}
       />
-
       <img
         src="Asset 3.svg"
         alt="Corner 3"
-        className="fixed top-5 right-5 w-[50px] h-[50px] z-[1000]"
+        className="fixed top-5 right-5 w-[50px] h-[50px] z-[1000] transition-all duration-1000"
+        style={{
+          transform: riverProgress === RIVER_MIN_PROGRESS 
+            ? 'translate(0, 0)' 
+            : 'translate(100%, -100%)',
+          opacity: riverProgress === RIVER_MIN_PROGRESS ? 1 : 0
+        }}
       />
-
       <img
         src="Asset 1.svg"
         alt="Corner 1"
-        className="fixed bottom-5 left-5 w-[50px] h-[50px] z-[1000]"
+        className="fixed bottom-5 left-5 w-[50px] h-[50px] z-[1000] transition-all duration-1000"
+        style={{
+          transform: riverProgress === RIVER_MIN_PROGRESS 
+            ? 'translate(0, 0)' 
+            : 'translate(-100%, 100%)',
+          opacity: riverProgress === RIVER_MIN_PROGRESS ? 1 : 0
+        }}
       />
-
       <img
         src="Asset 2.svg"
         alt="Corner 2"
-        className="fixed bottom-5 right-5 w-[50px] h-[50px] z-[1000]"
+        className="fixed bottom-5 right-5 w-[50px] h-[50px] z-[1000] transition-all duration-1000"
+        style={{
+          transform: riverProgress === RIVER_MIN_PROGRESS 
+            ? 'translate(0, 0)' 
+            : 'translate(100%, 100%)',
+          opacity: riverProgress === RIVER_MIN_PROGRESS ? 1 : 0
+        }}
       />
     </div>
   );
@@ -168,7 +190,7 @@ function Corners() {
 
 /** Content */
 function Content() {
-  const { setCursorColor } = useContext(Context);
+  const { setCursorColor, riverProgress } = useContext(Context);
 
   const handleMouseEnter = () => {
     setCursorColor("rgba(0, 0, 0, 0.5)");
@@ -178,45 +200,228 @@ function Content() {
     setCursorColor("rgba(255, 255, 255, 0.5)");
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        duration: 1,
+        delayChildren: 0.2,
+        staggerChildren: 0.15
+      }
+    }
+  };
+
+  const topTextVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: -50
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const headlineVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 100,
+      scale: 0.9
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 1.2,
+        ease: [0.215, 0.610, 0.355, 1.000], // easeOutCubic
+      }
+    }
+  };
+
+  const subtitleVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const rsvpContainerVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 50
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut",
+        delayChildren: 0.4,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const rsvpItemVariants = {
+    hidden: { 
+      opacity: 0,
+      y: 20
+    },
+    visible: { 
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const bottomTextVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 50
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <div className="fixed top-0 left-0 w-full h-full z-[1000] pointer-events-none">
-      {/* Top text */}
-      <div className="absolute top-5 left-0 w-full text-center pt-2 px-20">
-        <p className="font-body italic md:text-2xl">
-          We can&apos;t wait to begin our journey as a family, surrounded by
-          those we love most.
-        </p>
-      </div>
-
-      {/* Middle text */}
-      <div className="absolute top-0 left-0 bottom-0 w-full text-center pt-2 px-20 flex flex-col items-center justify-center">
-        <h1 className="font-heading text-4xl md:text-6xl">Andreea & Vlad</h1>
-        <p className="font-body italic md:text-2xl mt-2">
-          are getting married, and you&apos;re invited!
-        </p>
-        <div className="flex flex-col items-center justify-center mt-10">
-          <img src="/Asset 8.svg" alt="RSVP" className="px-4" />
-          <a
-            href="#"
-            className="bg-white px-8 py-2.5 text-lg my-2 pointer-events-auto"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+    <AnimatePresence>
+      {riverProgress === RIVER_MIN_PROGRESS && (
+        <motion.div 
+          className="fixed top-0 left-0 w-full h-full z-[1000] pointer-events-none"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          {/* Top text */}
+          <motion.div 
+            className="absolute top-5 left-0 w-full text-center pt-2 px-20"
+            variants={topTextVariants}
           >
-            RSVP HERE
-          </a>
-          <img src="/Asset 7.svg" alt="RSVP" className="px-4" />
-        </div>
-      </div>
+            <p className="font-body italic md:text-2xl">
+              We can&apos;t wait to begin our journey as a family, surrounded by
+              those we love most.
+            </p>
+          </motion.div>
 
-      {/* Bottom text */}
-      <div className="absolute bottom-5 left-0 w-full text-center pb-3 px-20">
-        <p className="font-body md:text-2xl">
-          Sunday, June 29, 2025, 17:00 • Villa Corsini a Mezzomonte (Tuscany,
-          Italy)
-        </p>
-      </div>
-    </div>
+          {/* Middle text */}
+          <motion.div 
+            className="absolute top-0 left-0 bottom-0 w-full text-center pt-2 px-5 flex flex-col items-center justify-center"
+          >
+            <motion.h1 
+              className="font-heading text-4xl md:text-6xl"
+              variants={headlineVariants}
+            >
+              Andreea & Vlad
+            </motion.h1>
+            <motion.p 
+              className="font-body italic md:text-2xl mt-2"
+              variants={subtitleVariants}
+            >
+              are getting married, and you&apos;re invited!
+            </motion.p>
+            <motion.div 
+              className="flex flex-col items-center justify-center mt-10"
+              variants={rsvpContainerVariants}
+            >
+              <motion.img 
+                src="/Asset 8.svg" 
+                alt="RSVP" 
+                className="px-4"
+                variants={rsvpItemVariants}
+              />
+              <motion.a
+                href="#"
+                className="bg-white px-8 py-2.5 text-lg my-2 pointer-events-auto"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                variants={rsvpItemVariants}
+                whileHover={{ 
+                  scale: 1.05,
+                  backgroundColor: "#f8f8f8",
+                  transition: { duration: 0.2 }
+                }}
+              >
+                RSVP HERE
+              </motion.a>
+              <motion.img 
+                src="/Asset 7.svg" 
+                alt="RSVP" 
+                className="px-4"
+                variants={rsvpItemVariants}
+              />
+            </motion.div>
+          </motion.div>
+
+          {/* Bottom text */}
+          <motion.div 
+            className="absolute bottom-5 left-0 w-full text-center pb-3 px-20"
+            variants={bottomTextVariants}
+          >
+            <p className="font-body md:text-2xl">
+              Sunday, June 29, 2025, 17:00 • Villa Corsini a Mezzomonte (Tuscany,
+              Italy)
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
+}
+
+/** River */
+function River() {
+  const { riverProgress, setRiverProgress } = useContext(Context);
+  const animationRef = useRef();
+  const startTimeRef = useRef(Date.now());
+
+  useEffect(() => {
+    const duration = 2500;
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTimeRef.current;
+      const progress = Math.max(RIVER_MIN_PROGRESS, 1 - elapsed / duration);
+
+      setRiverProgress(progress);
+
+      if (progress > RIVER_MIN_PROGRESS) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [setRiverProgress]);
+
+  return <RiverPass progress={riverProgress} scale={1.5} />;
 }
 
 /** App */
@@ -229,7 +434,7 @@ export default function App() {
         <Canvas>
           <HeavenPlanes />
           <EffectComposer>
-            <RiverPass progress={0.8} scale={1.5} />
+            <River />
             <Fluid
               radius={0.03}
               curl={10}
