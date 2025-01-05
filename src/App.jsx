@@ -49,7 +49,7 @@ function HeavenPlanes() {
   const { viewport, camera } = useThree();
   const { width, height } = viewport.getCurrentViewport(camera, [0, 0, 0]);
 
-  const textures = useTexture(["p4.png", "p3.png", "p2.png", "p1.png"]);
+  const textures = useTexture(["p4.jpg", "p3.png", "p2.png", "p1.png"]);
 
   useFrame((state) => {
     state.camera.position.x = Math.sin(state.clock.elapsedTime) / 15;
