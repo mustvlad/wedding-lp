@@ -408,7 +408,7 @@ function Content() {
                 variants={rsvpItemVariants}
               />
               <motion.a
-                href="#"
+                href="https://app.tuscan.wedding"
                 className="bg-white px-8 py-2.5 text-lg my-2 pointer-events-auto relative"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
