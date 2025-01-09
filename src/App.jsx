@@ -419,7 +419,7 @@ function Content() {
                   transition: { duration: 0.2 }
                 }}
               >
-                RSVP HERE
+                CONTINUE
               </motion.a>
               <motion.img 
                 src="/Asset 7.svg" 
